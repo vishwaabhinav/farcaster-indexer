@@ -3,6 +3,7 @@ export interface MerkleResponse {
     casts?: Cast[]
     users?: Profile[]
     verifications?: Verification[]
+    likes?: Reaction[]
   }
   next?: {
     cursor: string
@@ -74,6 +75,26 @@ export interface Cast {
   parentAuthor?: Profile
 }
 
+export interface Reaction {
+  type: string
+  hash: string
+  reactor: {
+    fid: number
+    username: string
+    displayName: string
+    pfp?: PFP
+    followerCount?: number
+    followingCount?: number
+    referrerUsername?: string
+    viewerContext?: {
+      following: boolean
+      followedBy: boolean
+    }
+  }
+  timestamp: number
+  castHash: string
+}
+
 export interface Verification {
   fid: number
   address: string
@@ -120,4 +141,13 @@ export interface FlattenedVerification {
   fid: number
   address: string
   created_at: Date
+}
+
+export interface FlattenedReaction {
+  hash: string
+  reactor_id: number
+  reactor_user_name: string
+  reactor_display_name: string
+  timestamp: Date
+  cast_hash: string
 }

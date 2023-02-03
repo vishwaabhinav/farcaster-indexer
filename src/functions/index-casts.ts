@@ -9,10 +9,12 @@ import { breakIntoChunks } from '../utils.js'
  * Index the casts from all Farcaster profiles and insert them into Supabase
  * @param limit The max number of recent casts to index
  */
-export async function indexAllCasts(limit?: number) {
+export async function indexAllCasts(limit?: number): Promise<string[]> {
   const startTime = Date.now()
   const allCasts = await getAllCasts(limit)
   const cleanedCasts = cleanCasts(allCasts)
+
+  console.log("Received all casts");
 
   const formattedCasts: FlattenedCast[] = cleanedCasts.map((c) => {
     return {
@@ -58,6 +60,8 @@ export async function indexAllCasts(limit?: number) {
     // If it takes more than 60 seconds, log the duration so we can optimize
     console.log(`Updated ${formattedCasts.length} casts in ${duration} seconds`)
   }
+
+  return formattedCasts.map(c => c.hash);
 }
 
 /**
