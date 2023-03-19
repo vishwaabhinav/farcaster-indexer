@@ -9,20 +9,20 @@ import { breakIntoChunks } from '../utils.js'
  * Index the likes across Farcaster and insert them into Supabase
  * @param limit The max number of recent likes to index
  */
-export async function indexAllReactions(casts: string[], limit?: number, recasts?: boolean) {
+export async function indexAllReactions(casts: string[], limit?: number) {
   const startTime = Date.now()
-  const count = recasts ? await getAllRecasts(casts, limit): await getAllLikes(casts, limit)
+  const count = await getAllLikes(casts, limit)
 
   const endTime = Date.now()
   const duration = (endTime - startTime) / 1000
 
   if (duration > 60) {
     // If it takes more than 60 seconds, log the duration so we can optimize
-    console.log(`Updated ${count} ${recasts ? 'recasts': 'likes'} in ${duration} seconds`)
+    console.log(`Updated ${count} likes in ${duration} seconds`)
   }
 }
 
-async function formatAndSave({allLikes, allRecasts}: {allLikes?: Reaction[], allRecasts?: FlattenedRecast[]}) {
+async function formatAndSave({allLikes}: {allLikes?: Reaction[]}) {
   const formattedLikes: FlattenedReaction[] = (allLikes || []).map((c) => {
     return {
       hash: c.hash,
@@ -41,20 +41,6 @@ async function formatAndSave({allLikes, allRecasts}: {allLikes?: Reaction[], all
   for (const chunk of chunks) {
     const { error } = await supabase.from('likes').upsert(chunk, {
       onConflict: 'hash',
-    })
-
-    if (error) {
-      console.log(error)
-    }
-  }
-
-    // Break formattedRecasts into chunks of 1000
-  chunks = breakIntoChunks(allRecasts || [], 1000)
-
-    // Upsert each chunk into the Supabase table
-  for (const chunk of chunks) {
-    const { error } = await supabase.from('recasts').upsert(chunk, {
-      onConflict: 'hash, recaster_id',
     })
 
     if (error) {
@@ -87,27 +73,6 @@ async function getAllLikes(casts: string[], limit?: number): Promise<number> {
 
   return count;
 }
-
-async function getAllRecasts(casts: string[], limit?: number): Promise<number> {
-  const chunks = breakIntoChunks(casts, 250);
-  let count = 0;
-
-  for (const castChunk of chunks) {
-    // console.log("fetching likes for :", castChunk);
-    const recasters: FlattenedRecast[] = (await Promise.all(castChunk.map((c: string) => getRecastsForCast(c)))).flat();
-
-    await formatAndSave({allRecasts: recasters});
-    count += castChunk.length;
-
-    await new Promise(r => setTimeout(r, 15000));
-
-    console.log(`[${(count * 100 / casts.length).toFixed(2)}%] ${count} of ${casts.length} processed`);
-    // console.log(likes);
-  }
-
-  return count;
-}
-
 
 async function getLikesForCast(cast: string): Promise<Reaction[]> {
   const allLikes: Reaction[] = new Array()
@@ -147,63 +112,11 @@ async function getLikesForCast(cast: string): Promise<Reaction[]> {
   return allLikes
 }
 
-async function getRecastsForCast(cast: string): Promise<FlattenedRecast[]> {
-  const allRecasters: FlattenedRecast[] = new Array()
-
-  let endpoint = buildRecastEndpoint(cast)
-
-  // console.log("like endpoint: ", endpoint);
-
-  while (true) {
-    try {
-      const _response = await got(endpoint, MERKLE_REQUEST_OPTIONS).json()
-      const response = _response as MerkleResponse
-      const recasters = response.result.users
-
-      // console.log("response for", cast, recasters);
-
-      if (!recasters) break
-
-      for (const user of recasters) {
-        allRecasters.push({
-          hash: cast,
-          recaster_id: user.fid,
-          recaster_username: user.username,
-        })
-      }
-
-      // If there are more recasters, get the next page
-      const cursor = response.next?.cursor
-      if (cursor) {
-        endpoint = buildRecastEndpoint(cast, cursor)
-      } else {
-        break
-      }
-    } catch (e) {
-      console.log("******* error for",cast, e);
-      break;
-    }
-  }
-  // console.log("got recasters for", cast, allLikes);
-
-  return allRecasters
-}
-
 /**
  * Helper function to build the profile endpoint with a cursor
  * @param cursor
  */
 function buildLikeEndpoint(cast: string, cursor?: string): string {
   return `https://api.warpcast.com/v2/cast-likes?castHash=${cast}&limit=100${cursor ? `&cursor=${cursor}` : ''
-    }`
-}
-
-
-/**
- * Helper function to build the profile endpoint with a cursor
- *
- */
-function buildRecastEndpoint(cast: string, cursor?: string): string {
-  return `https://api.warpcast.com/v2/cast-recasters?castHash=${cast}&limit=100${cursor ? `&cursor=${cursor}` : ''
     }`
 }

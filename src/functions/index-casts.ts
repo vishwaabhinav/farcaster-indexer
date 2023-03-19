@@ -32,6 +32,7 @@ export async function indexAllCasts(limit?: number): Promise<string[]> {
       replies_count: c.replies.count,
       reactions_count: c.reactions.count,
       recasts_count: c.recasts.count,
+      recasters: c.recasts.recasters || [],
       watches_count: c.watches.count,
       parent_author_fid: c.parentAuthor?.fid || null,
       parent_author_username: c.parentAuthor?.username || null,
@@ -49,7 +50,7 @@ export async function indexAllCasts(limit?: number): Promise<string[]> {
     })
 
     if (error) {
-      throw error
+      console.log(error)
     }
   }
 

@@ -138,6 +138,7 @@ export interface FlattenedCast {
   reactions_count: number
   recasts_count: number
   watches_count: number
+  recasters: Array<any>
   parent_author_fid: number | null
   parent_author_username: string | null
   deleted: boolean
