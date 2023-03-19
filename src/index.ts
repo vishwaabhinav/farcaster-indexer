@@ -5,7 +5,7 @@ import cron from 'node-cron'
 import { idRegistryAddr, idRegistryAbi } from './contracts/id-registry.js'
 import { IdRegistry, IdRegistryEvents } from './contracts/types/id-registry.js'
 import { indexAllCasts } from './functions/index-casts.js'
-import { indexAllLikes } from './functions/index-likes.js'
+import { indexAllReactions } from './functions/index-reactions.js'
 import { indexVerifications } from './functions/index-verifications.js'
 import { upsertAllRegistrations } from './functions/read-logs.js'
 import { updateAllProfiles } from './functions/update-profiles.js'
@@ -44,7 +44,8 @@ await upsertAllRegistrations(provider, idRegistry)
 // Run job every minute
 cron.schedule('* * * * *', async () => {
   const casts = await indexAllCasts(10_000)
-  await indexAllLikes(casts, 10_000)
+  await indexAllReactions(casts, 10_000, false)
+  await indexAllReactions(casts, 10_000, true)
   await updateAllProfiles()
 })
 

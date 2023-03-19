@@ -5,7 +5,7 @@
  * @returns {array} Array of smaller chunks
  */
 export function breakIntoChunks(array: any[], chunkSize: number): Array<any> {
-  const chunks = Array()
+  const chunks = []
   for (let i = 0; i < array.length; i += chunkSize) {
     chunks.push(array.slice(i, i + chunkSize))
   }

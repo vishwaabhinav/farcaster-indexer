@@ -116,6 +116,12 @@ export interface FlattenedProfile {
   updated_at?: Date
 }
 
+export interface FlattenedRecast {
+  hash: string
+  recaster_id: number
+  recaster_username: string
+}
+
 export interface FlattenedCast {
   hash: string
   thread_hash: string

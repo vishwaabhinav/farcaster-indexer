@@ -25,7 +25,7 @@ const getIdRegistryEvents = async ({
   // Fetch Transfer or Register event logs emitted by IdRegistry
   const logs = await provider.getLogs({
     address: contract.address,
-    fromBlock: fromBlock || 7648700,
+    fromBlock: fromBlock || 0x78b25e,
     toBlock: 'latest',
     topics: [
       [
